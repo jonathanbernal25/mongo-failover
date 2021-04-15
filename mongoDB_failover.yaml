@@ -1,0 +1,198 @@
+# The goal of this template is to explore the behavior of FIVE member mongoDB replica set across TWO datacenters (ap-southeast-1a & ap-southeast-1b).
+# CloudFormation template creates 5 EC2 instances with the following breakdown :
+#
+# | AWS Resource | MongoDB Member | Availability Zone |
+# |:------------:|:--------------:|:-----------------:|
+# | EC2 Instance |     PRIMARY    |  ap-southeast-1a  |
+# | EC2 Instance |    SECONDARY   |  ap-southeast-1a  |
+# | EC2 Instance |    SECONDARY   |  ap-southeast-1a  |
+# | EC2 Instance |    SECONDARY   |  ap-southeast-1b  |
+# | EC2 Instance |    SECONDARY   |  ap-southeast-1b  |
+
+Resources:
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow traffic from everywhere
+      SecurityGroupIngress:
+        IpProtocol: -1
+        CidrIp: 0.0.0.0/0
+  MongoA1:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref MySecurityGroup
+      KeyName: jon
+      AvailabilityZone: ap-southeast-1a
+      Tags:
+        - Key: "Name"
+          Value: mongoA1
+ 
+  MongoA2:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref MySecurityGroup
+      KeyName: jon
+      AvailabilityZone: ap-southeast-1a
+      Tags:
+        - Key: "Name"
+          Value: mongoA2
+
+  MongoA3:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref MySecurityGroup
+      KeyName: jon
+      AvailabilityZone: ap-southeast-1a
+      Tags:
+        - Key: "Name"
+          Value: mongoA3
+
+  MongoB1:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref MySecurityGroup
+      KeyName: jon
+      AvailabilityZone: ap-southeast-1b
+      Tags:
+        - Key: "Name"
+          Value: mongoB1
+
+  MongoB2:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref MySecurityGroup
+      KeyName: jon
+      AvailabilityZone: ap-southeast-1b
+      Tags:
+        - Key: "Name"
+          Value: mongoB2
