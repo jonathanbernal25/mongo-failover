@@ -1,8 +1,9 @@
 # mongo-failover
-Exploring MongoDB failover in ReplicaSet of FIVE data-bearing members across TWO datacenters + 1 arbiter.
+Exploring MongoDB failover in ReplicaSet of FIVE data-bearing members across TWO datacenters + ONE arbiter.
 
-The goal of this template is to explore the behavior of FIVE data-bearing member MongoDB ReplicaSet across TWO datacenters (ap-southeast-1a & ap-southeast-1b).
-CloudFormation template creates 6 EC2 instances with the following breakdown :
+This template explores the behavior of FIVE data-bearing members across TWO datacenters (ap-southeast-1a & ap-southeast-1b).
+
+This template creates 6 EC2 instances with the following breakdown :
 
 | AWS Resource | MongoDB Member | Availability Zone |
 |:------------:|:--------------:|:-----------------:|
