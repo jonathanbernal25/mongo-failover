@@ -190,7 +190,7 @@ Resources:
         - Key: "Name"
           Value: mongoB2
 
-  arbiter:
+  Arbiter:
     Type: AWS::EC2::Instance
     Properties:
       UserData:
@@ -222,4 +222,48 @@ Resources:
       AvailabilityZone: ap-southeast-1b
       Tags:
         - Key: "Name"
-          Value: arbiter
+          Value: mongoB3_arbiter
+
+
+
+  Helper:
+    Type: AWS::EC2::Instance
+    DependsOn: 
+      - MongoA1
+      - MongoA2
+      - MongoA3
+      - MongoB1
+      - MongoB2
+      - Arbiter
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /home/ec2-user/sample <<EOF
+          rs.initiate( {
+          _id : "hello",
+          members: [
+              { _id: 0, host: "${MongoA1.PublicIp}:27017", priority: 10 },
+              { _id: 1, host: "${MongoA2.PublicIp}:27017", priority: 8 },
+              { _id: 2, host: "${MongoA3.PublicIp}:27017", priority: 6 },
+              { _id: 3, host: "${MongoB1.PublicIp}:27017" },
+              { _id: 4, host: "${MongoB2.PublicIp}:27017" }]})
+
+          rs.addArb("${Arbiter.PublicIp}:27017")
+          EOF
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: ap-southeast-1b
+      Tags:
+        - Key: "Name"
+          Value: zzhelper
+
+
+
