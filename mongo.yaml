@@ -246,7 +246,7 @@ Resources:
           rs.initiate( {
           _id : "hello",
           members: [
-              { _id: 0, host: "${MongoA1.PublicIp}:27017", priority: 10 },
+              { _id: 0, host: "${MongoA1.PublicIp}:27017", priority: 9 },
               { _id: 1, host: "${MongoA2.PublicIp}:27017", priority: 8 },
               { _id: 2, host: "${MongoA3.PublicIp}:27017", priority: 6 },
               { _id: 3, host: "${MongoB1.PublicIp}:27017" },
