@@ -200,3 +200,37 @@ Resources:
       Tags:
         - Key: "Name"
           Value: mongoB2
+
+  arbiter:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          mkdir /var/lib/mongo/arb
+          chown -R mongod:mongod /var/lib/mongo/arb/
+          chmod 777 /var/lib/mongo/arb
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: ap-southeast-1b
+      Tags:
+        - Key: "Name"
+          Value: arbiter
