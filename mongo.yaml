@@ -23,6 +23,11 @@ Resources:
         CidrIp: 0.0.0.0/0
   MongoA1:
     Type: AWS::EC2::Instance
+    DependsOn: 
+      - MongoA2
+      - MongoA3
+      - MongoB1
+      - MongoB2
     Properties:
       UserData:
         Fn::Base64: !Sub |
@@ -46,7 +51,7 @@ Resources:
           sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
 
           systemctl start mongod
-
+   
       ImageId: ami-0f86a70488991335e
       InstanceType: t2.micro
       SecurityGroupIds: 
