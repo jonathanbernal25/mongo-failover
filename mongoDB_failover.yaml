@@ -1,4 +1,4 @@
-# The goal of this template is to explore the behavior of FIVE member mongoDB replica set across TWO datacenters (ap-southeast-1a & ap-southeast-1b).
+# The goal of this template is to explore the behavior of FIVE member MongoDB ReplicaSet across TWO datacenters (ap-southeast-1a & ap-southeast-1b).
 # CloudFormation template creates 5 EC2 instances with the following breakdown :
 #
 # | AWS Resource | MongoDB Member | Availability Zone |
@@ -9,8 +9,12 @@
 # | EC2 Instance |    SECONDARY   |  ap-southeast-1b  |
 # | EC2 Instance |    SECONDARY   |  ap-southeast-1b  |
 
+Parameters:
+  KeyPairName:
+    Type: String
+
 Resources:
-  MySecurityGroup:
+  DatabaseSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow traffic from everywhere
@@ -46,8 +50,8 @@ Resources:
       ImageId: ami-0f86a70488991335e
       InstanceType: t2.micro
       SecurityGroupIds: 
-        - !Ref MySecurityGroup
-      KeyName: jon
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
       AvailabilityZone: ap-southeast-1a
       Tags:
         - Key: "Name"
@@ -82,8 +86,8 @@ Resources:
       ImageId: ami-0f86a70488991335e
       InstanceType: t2.micro
       SecurityGroupIds: 
-        - !Ref MySecurityGroup
-      KeyName: jon
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
       AvailabilityZone: ap-southeast-1a
       Tags:
         - Key: "Name"
@@ -118,8 +122,8 @@ Resources:
       ImageId: ami-0f86a70488991335e
       InstanceType: t2.micro
       SecurityGroupIds: 
-        - !Ref MySecurityGroup
-      KeyName: jon
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
       AvailabilityZone: ap-southeast-1a
       Tags:
         - Key: "Name"
@@ -154,8 +158,8 @@ Resources:
       ImageId: ami-0f86a70488991335e
       InstanceType: t2.micro
       SecurityGroupIds: 
-        - !Ref MySecurityGroup
-      KeyName: jon
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
       AvailabilityZone: ap-southeast-1b
       Tags:
         - Key: "Name"
@@ -190,8 +194,8 @@ Resources:
       ImageId: ami-0f86a70488991335e
       InstanceType: t2.micro
       SecurityGroupIds: 
-        - !Ref MySecurityGroup
-      KeyName: jon
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
       AvailabilityZone: ap-southeast-1b
       Tags:
         - Key: "Name"
