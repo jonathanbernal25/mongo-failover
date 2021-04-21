@@ -224,8 +224,6 @@ Resources:
         - Key: "Name"
           Value: mongoB3_arbiter
 
-
-
   Helper:
     Type: AWS::EC2::Instance
     DependsOn: 
@@ -242,7 +240,10 @@ Resources:
 
           yum update -y
           
-          cat > /home/ec2-user/sample <<EOF
+          cat > /home/ec2-user/copy-paste <<EOF
+          
+          # STEP 1
+          # RUN THIS COMMAND FROM MONGO SHELL OF FIRST MEMBER
           rs.initiate( {
           _id : "hello",
           members: [
@@ -251,7 +252,13 @@ Resources:
               { _id: 2, host: "${MongoA3.PublicIp}:27017", priority: 6 },
               { _id: 3, host: "${MongoB1.PublicIp}:27017" },
               { _id: 4, host: "${MongoB2.PublicIp}:27017" }]})
-
+          
+          # STEP 2
+          # RUN THIS COMMAND FROM ARBITER
+          mongod --port 27017 --dbpath /var/lib/mongo/arb --replSet hello --bind_ip 0.0.0.0
+          
+          # STEP 3
+          # RUN THIS COMMAND FROM MONGO SHELL OF FIRST MEMBER
           rs.addArb("${Arbiter.PublicIp}:27017")
           EOF
 
