@@ -192,6 +192,12 @@ Resources:
 
   Arbiter:
     Type: AWS::EC2::Instance
+    DependsOn: 
+      - MongoA1
+      - MongoA2
+      - MongoA3
+      - MongoB1
+      - MongoB2
     Properties:
       UserData:
         Fn::Base64: !Sub |
@@ -214,36 +220,9 @@ Resources:
           chown -R mongod:mongod /var/lib/mongo/arb/
           chmod 777 /var/lib/mongo/arb
 
-      ImageId: ami-0f86a70488991335e
-      InstanceType: t2.micro
-      SecurityGroupIds: 
-        - !Ref DatabaseSG
-      KeyName: !Ref KeyPairName
-      AvailabilityZone: ap-southeast-1b
-      Tags:
-        - Key: "Name"
-          Value: mongoB3_arbiter
-
-  Helper:
-    Type: AWS::EC2::Instance
-    DependsOn: 
-      - MongoA1
-      - MongoA2
-      - MongoA3
-      - MongoB1
-      - MongoB2
-      - Arbiter
-    Properties:
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash -xe
-
-          yum update -y
-          
           cat > /home/ec2-user/copy-paste <<EOF
-          
           # STEP 1
-          # RUN THIS COMMAND FROM MONGO SHELL OF FIRST MEMBER
+          # Run this command from mongo shell of first ReplicaSet member:
           rs.initiate( {
           _id : "hello",
           members: [
@@ -254,12 +233,12 @@ Resources:
               { _id: 4, host: "${MongoB2.PublicIp}:27017" }]})
           
           # STEP 2
-          # RUN THIS COMMAND FROM ARBITER
+          # Run this command from Arbiter:
           mongod --port 27017 --dbpath /var/lib/mongo/arb --replSet hello --bind_ip 0.0.0.0
           
           # STEP 3
-          # RUN THIS COMMAND FROM MONGO SHELL OF FIRST MEMBER
-          rs.addArb("${Arbiter.PublicIp}:27017")
+          # Run this command from mongo shell of first ReplicaSet member:
+          rs.addArb("$(curl http://169.254.169.254/latest/meta-data/public-ipv4 -s):27017")
           EOF
 
       ImageId: ami-0f86a70488991335e
@@ -270,7 +249,6 @@ Resources:
       AvailabilityZone: ap-southeast-1b
       Tags:
         - Key: "Name"
-          Value: zzhelper
-
+          Value: mongoB3_arbiter
 
 
