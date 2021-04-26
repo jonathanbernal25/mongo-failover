@@ -220,25 +220,20 @@ Resources:
           chown -R mongod:mongod /var/lib/mongo/arb/
           chmod 777 /var/lib/mongo/arb
 
-          cat > /home/ec2-user/copy-paste <<EOF
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+
+          cat > /home/ec2-user/copypaste <<EOF
           # STEP 1
-          # Run this command from mongo shell of first ReplicaSet member:
-          rs.initiate( {
-          _id : "hello",
-          members: [
-              { _id: 0, host: "${MongoA1.PublicIp}:27017", priority: 9 },
-              { _id: 1, host: "${MongoA2.PublicIp}:27017", priority: 8 },
-              { _id: 2, host: "${MongoA3.PublicIp}:27017", priority: 6 },
-              { _id: 3, host: "${MongoB1.PublicIp}:27017" },
-              { _id: 4, host: "${MongoB2.PublicIp}:27017" }]})
-          
+          # Run this command from the first ReplicaSet member commandline:
+          mongo --eval 'rs.initiate({_id : "hello", members: [{_id: 0, host: "${MongoA1.PublicIp}:27017", priority: 9}, {_id: 1, host: "${MongoA2.PublicIp}:27017", priority: 8}, {_id: 2, host: "${MongoA3.PublicIp}:27017", priority: 6}, {_id: 3, host: "${MongoB1.PublicIp}:27017"}, {_id: 4, host: "${MongoB2.PublicIp}:27017"}]})' --quiet
+
           # STEP 2
-          # Run this command from Arbiter:
-          mongod --port 27017 --dbpath /var/lib/mongo/arb --replSet hello --bind_ip 0.0.0.0
-          
+          # Run this command from Arbiter commandline:
+          mongod --port 27017 --dbpath /var/lib/mongo/arb --replSet hello
+
           # STEP 3
           # Run this command from mongo shell of first ReplicaSet member:
-          rs.addArb("$(curl http://169.254.169.254/latest/meta-data/public-ipv4 -s):27017")
+          mongo --eval 'rs.addArb("$(curl http://169.254.169.254/latest/meta-data/public-ipv4 -s):27017")' --quiet
           EOF
 
       ImageId: ami-0f86a70488991335e
