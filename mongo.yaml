@@ -281,7 +281,7 @@ Resources:
           # A1 : --------
           # A2 : --------
           # A3 : --------
-          # B1 : Primary
+          # B1 : Secondary
           # B2 : Secondary
 
           # At this point, we have TWO Secondary members on DC2.
