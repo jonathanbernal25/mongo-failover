@@ -190,7 +190,7 @@ Resources:
         - Key: "Name"
           Value: mongoB2
 
-  Arbiter:
+  Temp:
     Type: AWS::EC2::Instance
     DependsOn: 
       - MongoA1
@@ -291,7 +291,7 @@ Resources:
 
 
           # RECONFIGURE BY FORCING
-          # TBD
+          # Continue with internal notes
 
 
 
@@ -314,6 +314,6 @@ Resources:
       AvailabilityZone: ap-southeast-1b
       Tags:
         - Key: "Name"
-          Value: mongoB3_arbiter
+          Value: temp
 
 
