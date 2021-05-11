@@ -1,8 +1,6 @@
 # Mongo Failover
 Exploring MongoDB failover in ReplicaSet of FIVE data-bearing members across TWO datacenters.
 
-This template explores the behavior of FIVE data-bearing members across TWO datacenters (ap-southeast-1a & ap-southeast-1b).
-
 This template creates FIVE EC2 instances with the following breakdown and ONE additional EC2 instance for quick copy-paste of commands :
 
 | AWS Resource |   Member Name  |   MongoDB Member  | Availability Zone | Priority |
