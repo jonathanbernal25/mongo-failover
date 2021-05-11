@@ -223,10 +223,80 @@ Resources:
           sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
 
           cat > /home/ec2-user/copypaste <<EOF
-          # STEP 1
-          # Run this command from the first ReplicaSet member commandline:
-          mongo --eval 'rs.initiate({_id : "hello", members: [{_id: 0, host: "${MongoA1.PublicIp}:27017", priority: 9}, {_id: 1, host: "${MongoA2.PublicIp}:27017", priority: 8}, {_id: 2, host: "${MongoA3.PublicIp}:27017", priority: 6}, {_id: 3, host: "${MongoB1.PublicIp}:27017"}, {_id: 4, host: "${MongoB2.PublicIp}:27017"}]})' --quiet
+          # STEP 0 - Create the ReplicaSet
+          # Run command from A1 commandline:
+          mongo --eval 'rs.initiate({_id : "hello", members: [{_id: 0, host: "${MongoA1.PublicIp}:27017", priority: 10}, {_id: 1, host: "${MongoA2.PublicIp}:27017", priority: 8}, {_id: 2, host: "${MongoA3.PublicIp}:27017", priority: 6}, {_id: 3, host: "${MongoB1.PublicIp}:27017", priority: 4}, {_id: 4, host: "${MongoB2.PublicIp}:27017", priority: 2}]})' --quiet
 
+          ####### Checkpoint 0 - READ/WRITE ON DC1
+          # Use this command to connect to ReplicaSet 
+          mongo --host hello/${MongoA1.PublicIp},${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
+          # Use this command to simulate writes to ReplicaSet
+          db.test_data_checkpoint0.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+
+          # A1 : Primary
+          # A2 : Secondary
+          # A3 : Secondary
+          # B1 : Secondary
+          # B2 : Secondary
+
+          # STEP 1 - Bring down A1
+          # Stop mongo service on member:
+          sudo systemctl stop mongod
+
+          ####### Checkpoint 1 - READ/WRITE ON DC1
+          # Use this command to connect to ReplicaSet 
+          mongo --host hello/${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
+          # Use this command to simulate writes to ReplicaSet
+          db.test_data_checkpoint1.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+          # A1 : --------
+          # A2 : Primary
+          # A3 : Secondary
+          # B1 : Secondary
+          # B2 : Secondary
+
+          # STEP 2 - Bring down A2
+          # Stop mongo service on member:
+          sudo systemctl stop mongod
+
+          ####### Checkpoint 2 - READ/WRITE ON DC1
+          # Use this command to connect to ReplicaSet 
+          mongo --host hello/${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
+          # Use this command to simulate writes to ReplicaSet
+          db.test_data_checkpoint2.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+          # A1 : --------
+          # A2 : --------
+          # A3 : Primary
+          # B1 : Secondary
+          # B2 : Secondary
+
+          # STEP 3 - Bring down A3
+          # Stop mongo service on member:
+          sudo systemctl stop mongod
+
+          ####### Checkpoint 3 - READ/WRITE ON DC2
+          # Use this command to connect to ReplicaSet 
+          mongo --host hello/${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
+          # Use this command to simulate writes to ReplicaSet
+          db.test_data_checkpoint3.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+          # A1 : --------
+          # A2 : --------
+          # A3 : --------
+          # B1 : Primary
+          # B2 : Secondary
+
+          # At this point, we have TWO Secondary members on DC2.
+          # We cannot READ, we cannot WRITE
+          # To allow READ, need to issue the following command on B1 to allow READ from that member
+          rs.secondaryOk()
+
+
+          # RECONFIGURE BY FORCING
+          # TBD
+
+
+
+          
+          ############ IGNORE FOR NOW ##############
           # STEP 2
           # Run this command from Arbiter commandline:
           mongod --port 27017 --dbpath /var/lib/mongo/arb --replSet hello
