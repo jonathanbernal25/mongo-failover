@@ -246,6 +246,7 @@ Resources:
           ####### Checkpoint 1 - READ/WRITE ON DC1
           # Use this command to connect to ReplicaSet 
           mongo --host hello/${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
+
           # Use this command to simulate writes to ReplicaSet
           db.test_data_checkpoint1.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
           # A1 : --------
@@ -260,7 +261,8 @@ Resources:
 
           ####### Checkpoint 2 - READ/WRITE ON DC1
           # Use this command to connect to ReplicaSet 
-          mongo --host hello/${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
+          mongo --host hello/${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
+
           # Use this command to simulate writes to ReplicaSet
           db.test_data_checkpoint2.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
           # A1 : --------
@@ -275,7 +277,8 @@ Resources:
 
           ####### Checkpoint 3 - READ/WRITE ON DC2
           # Use this command to connect to ReplicaSet 
-          mongo --host hello/${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
+          mongo --host hello/${MongoB1.PublicIp},${MongoB2.PublicIp} //NOT WORKING...
+
           # Use this command to simulate writes to ReplicaSet
           db.test_data_checkpoint3.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
           # A1 : --------
