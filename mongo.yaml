@@ -203,25 +203,6 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
 
-          yum update -y
-          
-          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
-          [mongodb-org-4.4]
-          name=MongoDB Repository
-          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
-          gpgcheck=1
-          enabled=1
-          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
-          EOF
-          
-          yum install mongodb-org -y
-
-          mkdir /var/lib/mongo/arb
-          chown -R mongod:mongod /var/lib/mongo/arb/
-          chmod 777 /var/lib/mongo/arb
-
-          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
-
           cat > /home/ec2-user/copypaste <<EOF
           # STEP 0 - Create the ReplicaSet
           # Run command from A1 commandline:
@@ -230,8 +211,9 @@ Resources:
           ####### Checkpoint 0 - READ/WRITE ON DC1
           # Use this command to connect to ReplicaSet 
           mongo --host hello/${MongoA1.PublicIp},${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
+
           # Use this command to simulate writes to ReplicaSet
-          db.test_data_checkpoint0.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+          db.test_data_checkpoint_0.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
 
           # A1 : Primary
           # A2 : Secondary
@@ -239,74 +221,124 @@ Resources:
           # B1 : Secondary
           # B2 : Secondary
 
-          # STEP 1 - Bring down A1
+          # STEP 1 - Bring down member A1
           # Stop mongo service on member:
           sudo systemctl stop mongod
 
           ####### Checkpoint 1 - READ/WRITE ON DC1
-          # Use this command to connect to ReplicaSet 
+          # Use this command to connect to ReplicaSet from external host
           mongo --host hello/${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
 
           # Use this command to simulate writes to ReplicaSet
-          db.test_data_checkpoint1.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+          db.test_data_checkpoint_1.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
           # A1 : --------
           # A2 : Primary
           # A3 : Secondary
           # B1 : Secondary
           # B2 : Secondary
 
-          # STEP 2 - Bring down A2
+          # STEP 2 - Bring down member A2
           # Stop mongo service on member:
           sudo systemctl stop mongod
 
           ####### Checkpoint 2 - READ/WRITE ON DC1
-          # Use this command to connect to ReplicaSet 
+          # Use this command to connect to ReplicaSet from external host
           mongo --host hello/${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
 
           # Use this command to simulate writes to ReplicaSet
-          db.test_data_checkpoint2.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+          db.test_data_checkpoint_2.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
           # A1 : --------
           # A2 : --------
           # A3 : Primary
           # B1 : Secondary
           # B2 : Secondary
 
-          # STEP 3 - Bring down A3
+          # STEP 3 - Bring down member A3
           # Stop mongo service on member:
           sudo systemctl stop mongod
 
           ####### Checkpoint 3 - READ/WRITE ON DC2
-          # Use this command to connect to ReplicaSet 
-          mongo --host hello/${MongoB1.PublicIp},${MongoB2.PublicIp} //NOT WORKING...
+          # Use this command to connect to ReplicaSet from external host
+          mongo --host hello/${MongoB1.PublicIp},${MongoB2.PublicIp}
 
           # Use this command to simulate writes to ReplicaSet
-          db.test_data_checkpoint3.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+          db.test_data_checkpoint_3.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
           # A1 : --------
           # A2 : --------
           # A3 : --------
           # B1 : Secondary
           # B2 : Secondary
 
-          # At this point, we have TWO Secondary members on DC2.
-          # We cannot READ, we cannot WRITE
-          # To allow READ, need to issue the following command on B1 to allow READ from that member
+          # At this point, we have TWO Secondary members on DC2 remaining.
+          # We cannot connect to the ReplicaSet, we cannot READ, we cannot WRITE. 
+          # To allow READ, issue the following command on member B1 AND/OR B2 to allow READ from that member.
           rs.secondaryOk()
 
+          #####################################################
+          ####### FORCING RECONFIGURATION OF REPLICASET #######
+          #####################################################
+          # Step 1 - From the desired PRIMARY, backup the ReplicaSet configuration.
+          cfg = rs.conf()
 
-          # RECONFIGURE BY FORCING
-          # Continue with internal notes
+          # Step 2 - From the desired PRIMARY, remove the unreachable members (A1, A2, A3) from the ReplicaSet, by setting the array equal to the surviving members ONLY.
+          # In our case: array position 3 and array position 4 are the remaining members (B1 and B2).
+          cfg.members = [cfg.members[3] , cfg.members[4]]
+
+          # Step 3 - From the desired PRIMARY, reconfigure the set by force.
+          rs.reconfig(cfg, {force : true})
 
 
+          ####### Checkpoint 4 - READ/WRITE ON DC2
+          # Use this command to connect to ReplicaSet from external host
+          mongo --host hello/${MongoB1.PublicIp},${MongoB2.PublicIp}
 
+          # Use this command to simulate writes to ReplicaSet
+          db.test_data_checkpoint_DELTA.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+
+          ####################################################
+          ########## SIMULATE DC1 RETURN TO SERVICE ##########
+          ####################################################
+          # Step 1 - Bring back member A3
+          sudo systemctl start mongod
+          # From PRIMARY member, run following command to have A3 rejoin and sync data with ReplicaSet
+          rs.add( { host: "${MongoA3.PublicIp}:27017" } )
+
+          # Step 2 - Bring back member A2
+          sudo systemctl start mongod
+          # From PRIMARY member, run following command to have A2 rejoin and sync data with ReplicaSet
+          rs.add( { host: "${MongoA2.PublicIp}:27017" } )
+
+          # Step 3 - Bring back member A1
+          sudo systemctl start mongod
+          # From PRIMARY member, run following command to have A1 rejoin and sync data with ReplicaSet
+          rs.add( { host: "${MongoA1.PublicIp}:27017" } )
+
+          # NOTE: We have rejoined the ReplicaSet in the following order, beginning with A3, then A2, then A1, in that order, thus our array will be as follows:
+          # member[0] = B1
+          # member[1] = B2
+          # member[2] = A3
+          # member[3] = A2
+          # member[4] = A1
+
+
+          ##################################################
+          ########## MOVE PRIMARY FROM DC2 -> DC1 ##########
+          ##################################################
+          # Step 1 - From the PRIMARY, backup the ReplicaSet configuration.
+          cfg = rs.conf()
           
-          ############ IGNORE FOR NOW ##############
-          # STEP 2
-          # Run this command from Arbiter commandline:
-          mongod --port 27017 --dbpath /var/lib/mongo/arb --replSet hello
+          # Step 2 - Assign new priority for every member in the ReplicaSet
+          cfg.members[0].priority = 2
+          cfg.members[1].priority = 4
+          cfg.members[2].priority = 6
+          cfg.members[3].priority = 8
+          cfg.members[4].priority = 10
 
-          # STEP 3
-          # Run this command from mongo shell of first ReplicaSet member:
-          mongo --eval 'rs.addArb("$(curl http://169.254.169.254/latest/meta-data/public-ipv4 -s):27017")' --quiet
+          # Step 3 - Apply new configuration
+          rs.reconfig(cfg)
+
+          # NOTE: Since member A1 has the highest priority, it will become PRIMARY, and thus it remains in DC1.
+
           EOF
 
       ImageId: ami-0f86a70488991335e
