@@ -1,0 +1,446 @@
+# This test case is for the following test case:
+# DC1 with 3 data-bearing members
+# DC2 with 3 data-bearing members + 1 arbiter
+# Total mongoDB nodes = 7
+Parameters:
+  KeyPairName:
+    Type: String
+
+Resources:
+  DatabaseSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow traffic from everywhere
+      SecurityGroupIngress:
+        IpProtocol: -1
+        CidrIp: 0.0.0.0/0
+  MongoA1:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+   
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: ap-southeast-1a
+      Tags:
+        - Key: "Name"
+          Value: mongoA1
+ 
+  MongoA2:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: ap-southeast-1a
+      Tags:
+        - Key: "Name"
+          Value: mongoA2
+
+  MongoA3:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: ap-southeast-1a
+      Tags:
+        - Key: "Name"
+          Value: mongoA3
+
+  MongoB1:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: ap-southeast-1b
+      Tags:
+        - Key: "Name"
+          Value: mongoB1
+
+  MongoB2:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: ap-southeast-1b
+      Tags:
+        - Key: "Name"
+          Value: mongoB2
+
+  MongoB3:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: ap-southeast-1b
+      Tags:
+        - Key: "Name"
+          Value: mongoB3
+
+  MongoB4:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sudo mkdir /var/lib/mongo/arb
+          sudo chown -R mongod:mongod /var/lib/mongo/arb/
+          sudo chmod 777 /var/lib/mongo/arb
+
+          sed -i '14s/.*/  dbPath: \/var\/lib\/mongo\/arb/' /etc/mongod.conf
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: ap-southeast-1b
+      Tags:
+        - Key: "Name"
+          Value: mongoB4
+
+
+
+
+
+
+
+
+
+
+  Temp:
+    Type: AWS::EC2::Instance
+    DependsOn: 
+      - MongoA1
+      - MongoA2
+      - MongoA3
+      - MongoB1
+      - MongoB2
+      - MongoB3
+      - MongoB4
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          cat > /home/ec2-user/copypaste <<EOF
+          # STEP 0 - Create the ReplicaSet
+          # Run command from A1 commandline:
+          mongo --eval 'rs.initiate({_id : "hello", members: [{_id: 0, host: "${MongoA1.PublicIp}:27017", priority: 12}, {_id: 1, host: "${MongoA2.PublicIp}:27017", priority: 10}, {_id: 2, host: "${MongoA3.PublicIp}:27017", priority: 8}, {_id: 3, host: "${MongoB1.PublicIp}:27017", priority: 6}, {_id: 4, host: "${MongoB2.PublicIp}:27017", priority: 4}, {_id: 5, host: "${MongoB3.PublicIp}:27017", priority: 2}, {_id: 6, host: "${MongoB4.PublicIp}:27017", "arbiterOnly": true}]})' --quiet
+
+
+          ####### Checkpoint 0 - READ/WRITE ON DC1
+          ########################################
+          # Use this command to connect to ReplicaSet 
+          mongo --host hello/${MongoA1.PublicIp},${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp},${MongoB3.PublicIp}
+
+          # Use this command to simulate writes to ReplicaSet
+          db.test_data_checkpoint_0.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+
+          # A1 : Primary
+          # A2 : Secondary
+          # A3 : Secondary
+          # B1 : Secondary
+          # B2 : Secondary
+          # B3 : Secondary
+          # B4 : Arbiter
+
+          # STEP 1 - Bring down member A1
+          # Stop mongo service on member:
+          sudo systemctl stop mongod
+
+          ####### Checkpoint 1 - READ/WRITE ON DC1
+          ########################################
+          # Use this command to connect to ReplicaSet from external host
+          mongo --host hello/${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp},${MongoB3.PublicIp}
+
+          # Use this command to simulate writes to ReplicaSet
+          db.test_data_checkpoint_1.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+          
+          # A1 : --------
+          # A2 : Primary
+          # A3 : Secondary
+          # B1 : Secondary
+          # B2 : Secondary
+          # B3 : Secondary
+          # B4 : Arbiter
+
+          # STEP 2 - Bring down member A2
+          # Stop mongo service on member:
+          sudo systemctl stop mongod
+
+          ####### Checkpoint 2 - READ/WRITE ON DC1
+          ########################################
+          # Use this command to connect to ReplicaSet from external host
+          mongo --host hello/${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp},${MongoB3.PublicIp}
+
+          # Use this command to simulate writes to ReplicaSet
+          db.test_data_checkpoint_2.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+          
+          # A1 : --------
+          # A2 : --------
+          # A3 : Primary
+          # B1 : Secondary
+          # B2 : Secondary
+          # B3 : Secondary
+          # B4 : Arbiter
+
+          # STEP 3 - Bring down member A3
+          # Stop mongo service on member:
+          sudo systemctl stop mongod
+
+          ####### Checkpoint 3 - READ/WRITE ON DC2
+          ########################################
+          # Use this command to connect to ReplicaSet from external host
+          mongo --host hello/${MongoB1.PublicIp},${MongoB2.PublicIp},${MongoB3.PublicIp}
+
+          # Use this command to simulate writes to ReplicaSet
+          db.test_data_checkpoint_3.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
+          
+          # A1 : --------
+          # A2 : --------
+          # A3 : --------
+          # B1 : Primary
+          # B2 : Secondary
+          # B3 : Secondary
+          # B4 : Arbiter
+
+          # At this point, DC1 is down with only DC2 remaining.
+          # Currently there is 1 PRIMARY and 2 secondary. 
+          # DC2 is still READ/WRITE available !
+
+          ####################################################
+          ########## SIMULATE DC1 RETURN TO SERVICE ##########
+          ####################################################
+          # Step 1 - Bring back member A3
+          sudo systemctl start mongod
+          # From PRIMARY member, run following command to have A3 rejoin and sync data with ReplicaSet
+          rs.add( { host: "${MongoA3.PublicIp}:27017" } )
+
+          # Step 2 - Bring back member A2
+          sudo systemctl start mongod
+          # From PRIMARY member, run following command to have A2 rejoin and sync data with ReplicaSet
+          rs.add( { host: "${MongoA2.PublicIp}:27017" } )
+
+          # Step 3 - Bring back member A1
+          sudo systemctl start mongod
+          # From PRIMARY member, run following command to have A1 rejoin and sync data with ReplicaSet
+          rs.add( { host: "${MongoA1.PublicIp}:27017" } )
+
+          # NOTE: We have rejoined the ReplicaSet in the following order, beginning with A3, then A2, then A1, in that order, thus our array will be as follows:
+          # member[0] = B1
+          # member[1] = B2
+          # member[2] = B3
+          # member[3] = B4 (arbiter)
+          # member[4] = A3
+          # member[5] = A2
+          # member[6] = A1
+          Do not confuse this with _id
+
+
+          ##################################################
+          ########## MOVE PRIMARY FROM DC2 -> DC1 ##########
+          ##################################################
+          # Step 1 - From the PRIMARY, backup the ReplicaSet configuration.
+          cfg = rs.conf()
+          
+          # Step 2 - Assign new priority for every member in the ReplicaSet
+          NOTE: we are skipping: cfg.member[3] - because this is the arbiter. 
+          
+          cfg.members[0].priority = 2
+          cfg.members[1].priority = 4
+          cfg.members[2].priority = 6
+          cfg.members[4].priority = 8
+          cfg.members[5].priority = 10
+          cfg.members[6].priority = 12
+
+          # Step 3 - Apply new configuration
+          rs.reconfig(cfg)
+
+          # NOTE: Since member A1 has the highest priority, it will become PRIMARY, and thus it returns to DC1.
+
+          EOF
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: ap-southeast-1b
+      Tags:
+        - Key: "Name"
+          Value: temp
+
+
