@@ -82,6 +82,42 @@ Resources:
         - Key: "Name"
           Value: mongoA2
 
+  MongoA3:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: ap-southeast-1a
+      Tags:
+        - Key: "Name"
+          Value: mongoA3
+
   MongoB1:
     Type: AWS::EC2::Instance
     Properties:
@@ -118,6 +154,42 @@ Resources:
         - Key: "Name"
           Value: mongoB1
 
+  MongoB2:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+
+          yum update -y
+          
+          cat > /etc/yum.repos.d/mongodb-org-4.4.repo <<EOF
+          [mongodb-org-4.4]
+          name=MongoDB Repository
+          baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
+          gpgcheck=1
+          enabled=1
+          gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
+          EOF
+          
+          yum install mongodb-org -y
+
+          sed -i '29s/.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
+          sed -i '36s/.*/replication:/' /etc/mongod.conf
+          sed -i '37s/.*/  replSetName: hello/' /etc/mongod.conf
+
+          systemctl start mongod
+
+      ImageId: ami-0f86a70488991335e
+      InstanceType: t2.micro
+      SecurityGroupIds: 
+        - !Ref DatabaseSG
+      KeyName: !Ref KeyPairName
+      AvailabilityZone: ap-southeast-1b
+      Tags:
+        - Key: "Name"
+          Value: mongoB2
+
   Temp:
     Type: AWS::EC2::Instance
     DependsOn: 
@@ -134,18 +206,20 @@ Resources:
           cat > /home/ec2-user/copypaste <<EOF
           # STEP 0 - Create the ReplicaSet
           # Run command from A1 commandline:
-          mongo --eval 'rs.initiate({_id : "hello", members: [{_id: 0, host: "${MongoA1.PublicIp}:27017", priority: 10}, {_id: 1, host: "${MongoA2.PublicIp}:27017", priority: 8}, {_id: 2, host: "${MongoB1.PublicIp}:27017", priority: 6}]})' --quiet
+          mongo --eval 'rs.initiate({_id : "hello", members: [{_id: 0, host: "${MongoA1.PublicIp}:27017", priority: 10}, {_id: 1, host: "${MongoA2.PublicIp}:27017", priority: 8}, {_id: 2, host: "${MongoA3.PublicIp}:27017", priority: 6}, {_id: 3, host: "${MongoB1.PublicIp}:27017", priority: 4}, {_id: 4, host: "${MongoB2.PublicIp}:27017", priority: 2}]})' --quiet
 
           ####### Checkpoint 0 - READ/WRITE ON DC1
           # Use this command to connect to ReplicaSet 
-          mongo --host hello/${MongoA1.PublicIp},${MongoA2.PublicIp},${MongoB1.PublicIp}
+          mongo --host hello/${MongoA1.PublicIp},${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
 
           # Use this command to simulate writes to ReplicaSet
           db.test_data_checkpoint_0.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
 
           # A1 : Primary
           # A2 : Secondary
+          # A3 : Secondary
           # B1 : Secondary
+          # B2 : Secondary
 
           # STEP 1 - Bring down member A1
           # Stop mongo service on member:
@@ -153,8 +227,8 @@ Resources:
 
           ####### Checkpoint 1 - READ/WRITE ON DC1
           # Use this command to connect to ReplicaSet from external host
-          mongo --host hello/${MongoA1.PublicIp},${MongoA2.PublicIp},${MongoB1.PublicIp}
-          
+          mongo --host hello/${MongoA2.PublicIp},${MongoA3.PublicIp},${MongoB1.PublicIp},${MongoB2.PublicIp}
+
           # Use this command to simulate writes to ReplicaSet
           db.test_data_checkpoint_1.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
           # A1 : --------
@@ -276,3 +350,5 @@ Resources:
       Tags:
         - Key: "Name"
           Value: temp
+
+
