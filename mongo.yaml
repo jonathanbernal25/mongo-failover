@@ -159,8 +159,7 @@ Resources:
           ####### Checkpoint 2 - READ/WRITE ON DC1
           # Use this command to connect to ReplicaSet from external host
           mongo --host hello/${MongoA1.PublicIp},${MongoA2.PublicIp},${MongoB1.PublicIp}
-          
-		  # Use this command to simulate writes to ReplicaSet
+          # Use this command to simulate writes to ReplicaSet
           db.test_data_checkpoint_2.insertOne({ item: "canvas", qty: 100, tags: ["cotton"], size: { h: 28, w: 35.5, uom: "cm" } })
 
           # STEP 3 - Bring down a member
@@ -197,7 +196,7 @@ Resources:
           # From PRIMARY member, select member to bring back with ReplicaSet
           
           # A1
-		  rs.add( { host: "${MongoA1.PublicIp}:27017" } )
+          rs.add( { host: "${MongoA1.PublicIp}:27017" } )
           # A2
           rs.add( { host: "${MongoA2.PublicIp}:27017" } )
           #A3
